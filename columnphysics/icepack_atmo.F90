@@ -53,7 +53,8 @@
                                       highfreq, natmiter, &
                                       Tsf,      potT,     &
                                       uatm,     vatm,     &  
-                                      wind,     zlvl,     &  
+                                      wind,     zlvl_t,   &
+                                      zlvl_q,   zlvl_v,   &     
                                       Qa,       rhoa,     &
                                       strx,     stry,     &   
                                       Tref,     Qref,     &
@@ -81,7 +82,9 @@
          uatm     , & ! x-direction wind speed (m/s)
          vatm     , & ! y-direction wind speed (m/s)
          wind     , & ! wind speed (m/s)
-         zlvl     , & ! atm level height (m)
+         zlvl_t   , & ! atm level height for temperature (m)
+         zlvl_q   , & ! atm level height for humidity    (m)
+         zlvl_v   , & ! atm level height for velocities  (m)
          Qa       , & ! specific humidity (kg/kg)
          rhoa         ! air density (kg/m^3)
 
@@ -143,7 +146,9 @@
          re    , & ! sqrt of exchange coefficient (water)
          rh    , & ! sqrt of exchange coefficient (heat)
          vmag  , & ! surface wind magnitude   (m/s)
-         alz   , & ! ln(zlvl  /z10)
+         alz_t , & ! ln(zlvl_t  /z10)
+         alz_q , & ! ln(zlvl_q  /z10)
+         alz_v , & ! ln(zlvl_v  /z10)
          thva  , & ! virtual temperature      (K)
          cp    , & ! specific heat of moist air
          hol   , & ! H (at zlvl  ) over L
@@ -229,8 +234,11 @@
       thva = potT * (c1 + zvir * Qa) ! virtual pot temp (K)
       delt = potT - TsfK       ! pot temp diff (K)
       delq = Qa - ssq          ! spec hum dif (kg/kg)
-      alz  = log(zlvl/zref)
       cp   = cp_air*(c1 + cpvir*ssq)
+
+      alz_t = log(zlvl_t/zref)
+      alz_q = log(zlvl_q/zref)
+      alz_v = log(zlvl_v/zref)
       
       !------------------------------------------------------------
       ! first estimate of Z/L and ustar, tstar and qstar
@@ -252,7 +260,7 @@
       do k = 1, natmiter
 
          ! compute stability & evaluate all stability functions
-         hol = vonkar * gravit * zlvl &
+         hol = vonkar * gravit * zlvl_t &
                  * (tstar/thva &
                  + qstar/(c1/zvir+Qa)) &
                  / ustar**2
@@ -271,9 +279,9 @@
                 + (c1 - stable)*psixhu(xqq)
 
          ! shift all coeffs to measurement height and stability
-         rd = rdn / (c1+rdn/vonkar*(alz-psimh))
-         rh = rhn / (c1+rhn/vonkar*(alz-psixh))
-         re = ren / (c1+ren/vonkar*(alz-psixh))
+         rd = rdn / (c1+rdn/vonkar*(alz_v-psimh))
+         rh = rhn / (c1+rhn/vonkar*(alz_t-psixh))
+         re = ren / (c1+ren/vonkar*(alz_q-psixh))
          
          ! update ustar, tstar, qstar using updated, shifted coeffs
          ustar = rd * vmag
@@ -338,16 +346,16 @@
       ! Compute diagnostics: 2m ref T, Q, U
       !------------------------------------------------------------
 
-      hol   = hol*zTrf/zlvl
+      hol   = hol*zTrf/zlvl_t    
       xqq   = max( c1, sqrt(abs(c1-c16*hol)) )
       xqq   = sqrt(xqq)
       psix2 = -c5*hol*stable + (c1-stable)*psixhu(xqq)
       fac   = (rh/vonkar) &
-            * (alz + al2 - psixh + psix2)
+            * (alz_t + al2 - psixh + psix2)
       Tref  = potT - delt*fac
       Tref  = Tref - p01*zTrf ! pot temp to temp correction
       fac   = (re/vonkar) &
-            * (alz + al2 - psixh + psix2)
+            * (alz_q + al2 - psixh + psix2)
       Qref  = Qa - delq*fac
 
       if (highfreq .and. sfctype(1:3)=='ice') then
@@ -800,10 +808,11 @@
 !autodocument_start icepack_atm_boundary
 ! 
 
-      subroutine icepack_atm_boundary(sfctype,                    &
+      subroutine icepack_atm_boundary(sfctype,                   &
                                      Tsf,         potT,          &
                                      uatm,        vatm,          &
-                                     wind,        zlvl,          &
+                                     wind,        zlvl_t,        &
+                                     zlvl_q,      zlvl_v,        &
                                      Qa,          rhoa,          &
                                      strx,        stry,          &
                                      Tref,        Qref,          &
@@ -823,7 +832,9 @@
          uatm     , & ! x-direction wind speed (m/s)
          vatm     , & ! y-direction wind speed (m/s)
          wind     , & ! wind speed (m/s)
-         zlvl     , & ! atm level height (m)
+         zlvl_t   , & ! atm level height for temperature (m)
+         zlvl_q   , & ! atm level height for humidity    (m)
+         zlvl_v   , & ! atm level height for velocities  (m)
          Qa       , & ! specific humidity (kg/kg)
          rhoa         ! air density (kg/m^3)
 
@@ -888,7 +899,8 @@
                                    highfreq, natmiter,      &
                                    Tsf,      potT,          &
                                    uatm,     vatm,          &
-                                   wind,     zlvl,          &
+                                   wind,     zlvl_t,        &
+                                   zlvl_q,   zlvl_v,        &
                                    Qa,       rhoa,          &
                                    strx,     stry,          &
                                    Tref,     Qref,          &

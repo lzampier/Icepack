@@ -2041,7 +2041,8 @@
                                     iage        , FY          , &
                                     aerosno     , aeroice     , &
                                     uatm        , vatm        , &
-                                    wind        , zlvl        , &
+                                    wind        , zlvl_t      , &
+                                    zlvl_q      , zlvl_v      , &       
                                     Qa          , rhoa        , &
                                     Tair        , Tref        , &
                                     Qref        , Uref        , &
@@ -2118,7 +2119,9 @@
          aice        , & ! sea ice concentration
          vice        , & ! volume per unit area of ice          (m)
          vsno        , & ! volume per unit area of snow         (m)
-         zlvl        , & ! atm level height (m)
+         zlvl_t      , & ! atm level height for temperature (m)
+         zlvl_q      , & ! atm level height for humidity    (m)
+         zlvl_v      , & ! atm level height for velocities  (m)
          uatm        , & ! wind velocity components (m/s)
          vatm        , &
          wind        , & ! wind speed (m/s)
@@ -2348,7 +2351,8 @@
                call icepack_atm_boundary( 'ice',                  &
                                         Tsfc(n),  potT,          &
                                         uatm,     vatm,          &
-                                        wind,     zlvl,          &
+                                        wind,     zlvl_t,        &
+                                        zlvl_q,   zlvl_v,        &
                                         Qa,       rhoa,          &
                                         strairxn, strairyn,      &
                                         Trefn,    Qrefn,         &
