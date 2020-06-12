@@ -84,8 +84,8 @@
       !-----------------------------------------------------------------
 
       real (kind=dbl_kind), public :: &
-         rhos      = 330.0_dbl_kind   ,&! density of snow (kg/m^3)
-         rhoi      = 917.0_dbl_kind   ,&! density of ice (kg/m^3)
+         rhos      = 290.0_dbl_kind   ,&! density of snow (kg/m^3)
+         rhoi      = 910.0_dbl_kind   ,&! density of ice (kg/m^3)
          rhosi     = 940.0_dbl_kind   ,&! average sea ice density
                                         ! Cox and Weeks, 1982: 919-974 kg/m^2
          rhow      = 1026.0_dbl_kind  ,&! density of seawater (kg/m^3)
@@ -112,8 +112,8 @@
                                         ! kice is not used for mushy thermo
          kice      = 2.03_dbl_kind    ,&! thermal conductivity of fresh ice(W/m/deg)
                                         ! kseaice is used only for zero-layer thermo
-         kseaice   = 2.00_dbl_kind    ,&! thermal conductivity of sea ice (W/m/deg)
-         ksno      = 0.30_dbl_kind    ,&! thermal conductivity of snow  (W/m/deg)
+         kseaice   = 2.1656_dbl_kind  ,&! thermal conductivity of sea ice (W/m/deg)
+         ksno      = 0.31_dbl_kind    ,&! thermal conductivity of snow  (W/m/deg)
          hs_min    = 1.e-4_dbl_kind   ,&! min snow thickness for computing zTsn (m)
          snowpatch = 0.02_dbl_kind    ,&! parameter for fractional snow area (m)
          saltmax   = 3.2_dbl_kind     ,&! max salinity at ice base for BL99 (ppt)
@@ -166,8 +166,8 @@
 
       real (kind=dbl_kind), public :: &
          ! (Briegleb JGR 97 11475-11485  July 1992)
-         emissivity = 0.95_dbl_kind ,&! emissivity of snow and ice
-         albocn     = 0.06_dbl_kind ,&! ocean albedo
+         emissivity = 0.97_dbl_kind ,&! emissivity of snow and ice
+         albocn     = 0.1_dbl_kind ,&! ocean albedo
          vonkar     = 0.4_dbl_kind  ,&! von Karman constant
          stefan_boltzmann = 567.0e-10_dbl_kind,&!  W/m^2/K^4
          ! (Ebert, Schramm and Curry JGR 100 15965-15975 Aug 1995)
