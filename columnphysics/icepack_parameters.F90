@@ -84,11 +84,11 @@
       !-----------------------------------------------------------------
 
       real (kind=dbl_kind), public :: &
-         rhos      = 330.0_dbl_kind   ,&! density of snow (kg/m^3)
-         rhoi      = 917.0_dbl_kind   ,&! density of ice (kg/m^3)
+         rhos      = 290.0_dbl_kind   ,&! density of snow (kg/m^3)
+         rhoi      = 910.0_dbl_kind   ,&! density of ice (kg/m^3)
          rhosi     = 940.0_dbl_kind   ,&! average sea ice density
                                         ! Cox and Weeks, 1982: 919-974 kg/m^2
-         rhow      = 1026.0_dbl_kind  ,&! density of seawater (kg/m^3)
+         rhow      = 1025.0_dbl_kind  ,&! density of seawater (kg/m^3)
          rhofresh  = 1000.0_dbl_kind    ! density of fresh water (kg/m^3)
 
 !-----------------------------------------------------------------------
