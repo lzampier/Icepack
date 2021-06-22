@@ -1996,7 +1996,7 @@
       ! Let rain drain through to the ocean.
       !-----------------------------------------------------------------
 
-      fresh  = fresh + frain * aice
+!!PS       fresh  = fresh + frain * aice
 
       !-----------------------------------------------------------------
       ! Given thermodynamic growth rates, transport ice between
