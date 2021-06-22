@@ -444,9 +444,11 @@
       !-----------------------------------------------------------------
             
       dhi = hin - worki
-      dhs = hsn - works - hsn_new
+!!PS       dhs = hsn - works - hsn_new
+      dhs = hsn - works !!PS - hsn_new
       
-      freshn = freshn + evapn - (rhoi*dhi + rhos*dhs) / dt
+!!PS       freshn = freshn + evapn - (rhoi*dhi + rhos*dhs) / dt
+      freshn = freshn - (rhoi*dhi + rhos*dhs) / dt
       fsaltn = fsaltn - rhoi*dhi*ice_ref_salinity*p001/dt
       fhocnn = fhocnn + fadvocn ! for ktherm=2 
 
