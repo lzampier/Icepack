@@ -444,8 +444,14 @@
       !-----------------------------------------------------------------
             
       dhi = hin - worki
-      dhs = hsn - works - hsn_new
-      
+      !PS hsn_new needs also to change to real snowthinkness so this info exists
+      !PS outside of this subroutine especially that based on hsn_new also freshwater
+      !PS is added it needs to enter thermodynmic snow growth rate on which freshwater
+      !PS is balanced in FESOM !!!
+      hsn = hsn - hsn_new 
+      dhs = hsn - works 
+      !PS dhs = hsn - works - hsn_new
+
       freshn = freshn + evapn - (rhoi*dhi + rhos*dhs) / dt
       fsaltn = fsaltn - rhoi*dhi*ice_ref_salinity*p001/dt
       fhocnn = fhocnn + fadvocn ! for ktherm=2 
