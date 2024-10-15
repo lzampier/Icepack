@@ -1996,8 +1996,19 @@
       ! Let rain drain through to the ocean.
       !-----------------------------------------------------------------
 
-      fresh  = fresh + frain * aice
-
+      !PS fresh = fresh + frain * aice
+      
+      !PS I would recomment to comment this line here and add the total frain 
+      !PS in subroutine ocn_mixed_layer_icepack(...) as 
+      !PS  --> fresh_tot = fresh + frain + (-evap_ocn + fsnow)*(c1-aice) 
+      !PS instead of 
+      !PS  --> fresh_tot = fresh + (-evap_ocn + frain + fsnow)*(c1-aice) 
+      !PS The problem is that i dont see that anything special is done with the 
+      !PS term frain*aice it ends up anyway in the ocean but in the way of the code
+      !PS we seem to lose some digits. If we leave this term here i can only balance 
+      !PS the total ocean volume to 10e-11 not to maschine preccision of 10e-17 
+      !PS which i would prefer!!!
+      
       !-----------------------------------------------------------------
       ! Given thermodynamic growth rates, transport ice between
       ! thickness categories.
