@@ -920,7 +920,7 @@
 ! generates from the results in Zampieri et al. (2023)
 ! DOI: https://doi.org/10.1029/2023GL106760
 !
-! authors: Lorenzo Zampieri
+! Author: Lorenzo Zampieri, ECMWF (previously NCAR)
 !
       subroutine adjust_conductivity_horizontal_conduction (kh, fcondbot)
 
@@ -1262,7 +1262,7 @@
 !=======================================================================
 !
 ! Compute terms in tridiagonal matrix that will be solved to find
-!  the new vertical temperature profile
+! the new vertical temperature profile
 ! This routine is for the case in which Tsfc is already known.
 !
 ! authors William H. Lipscomb, LANL
@@ -1524,6 +1524,106 @@
       enddo                     ! k
 
       end subroutine tridiag_solver
+
+!=======================================================================
+!
+! Smooth interpolation using monotonic piecewise cubic Hermite (PCHIP)
+!
+! Returns slope (dimensionless) for a given snow conductivity 
+! (W m-1 K-1). The slope is used in the adjust_conductivity_horizontal_conduction 
+! subroutine to account for horizontal conduction effects.
+!
+! The interpolation is based on tabulated values from:
+! Zampieri et al. (2023), Geophysical Research Letters
+! DOI: https://doi.org/10.1029/2023GL106760
+!
+! Author: Lorenzo Zampieri, ECMWF (previously NCAR)
+!
+!=======================================================================
+      subroutine smooth_interpolate(x_input, y_output)
+      implicit none
+
+      !-----------------------------------------------------------------
+      ! Input and output variables
+      !-----------------------------------------------------------------
+      real, intent(in)  :: x_input   ! Snow thermal conductivity (W m-1 K-1)
+      real, intent(out) :: y_output  ! Slope correction factor (dimensionless)
+
+      !-----------------------------------------------------------------
+      ! Local parameters
+      !-----------------------------------------------------------------
+      real, parameter :: large_value = 1.0  ! Value returned for x <= xmin
+      integer, parameter :: n_points = 5    ! Number of tabulated data points
+
+      real :: x_points(n_points)            ! Snow conductivity values (W m-1 K-1)
+      real :: y_points(n_points)            ! Slope values (dimensionless)
+      real :: delta(n_points-1)             ! Secant slopes
+      real :: m(n_points)                   ! PCHIP endpoint slopes
+      real :: h, t, t2, t3                  ! Temporary variables
+      integer :: i                          ! Loop index
+
+      !-----------------------------------------------------------------
+      ! Tabulated data (Zampieri et al., 2023)
+      !-----------------------------------------------------------------
+      x_points = (/ 0.001, 0.1, 0.3, 2.1, 100.0 /)
+      y_points = (/ 0.3,   0.14, 0.065, 0.0001, 0.0 /)
+
+      !-----------------------------------------------------------------
+      ! Handle domain edges
+      !-----------------------------------------------------------------
+      if (x_input <= x_points(1)) then
+         y_output = large_value
+         return
+      else if (x_input >= x_points(n_points)) then
+         y_output = y_points(n_points)
+         return
+      endif
+
+      !-----------------------------------------------------------------
+      ! Compute secant slopes between tabulated points
+      !-----------------------------------------------------------------
+      do i = 1, n_points-1
+         delta(i) = (y_points(i+1) - y_points(i)) / &
+                    (x_points(i+1) - x_points(i))
+      enddo
+
+      !-----------------------------------------------------------------
+      ! Compute slopes at each point (PCHIP monotonicity constraints)
+      !-----------------------------------------------------------------
+      m(1) = delta(1)
+      m(n_points) = delta(n_points-1)
+      do i = 2, n_points-1
+         if (delta(i-1)*delta(i) > 0.0) then
+            m(i) = 2.0 * delta(i-1)*delta(i) / (delta(i-1) + delta(i))
+         else
+            m(i) = 0.0
+         endif
+      enddo
+
+      !-----------------------------------------------------------------
+      ! Locate the interval [x_i, x_{i+1}] containing x_input
+      !-----------------------------------------------------------------
+      do i = 1, n_points-1
+         if (x_input >= x_points(i) .and. x_input <= x_points(i+1)) exit
+      enddo
+
+      !-----------------------------------------------------------------
+      ! Normalize distance t in [0,1] within the interval
+      !-----------------------------------------------------------------
+      h  = x_points(i+1) - x_points(i)
+      t  = (x_input - x_points(i)) / h
+      t2 = t*t
+      t3 = t*t2
+
+      !-----------------------------------------------------------------
+      ! Evaluate Hermite cubic interpolation (Fritsch & Carlson, 1980)
+      !-----------------------------------------------------------------
+      y_output = (2.0*t3 - 3.0*t2 + 1.0)*y_points(i) + &
+                 (t3 - 2.0*t2 + t)*h*m(i) + &
+                 (-2.0*t3 + 3.0*t2)*y_points(i+1) + &
+                 (t3 - t2)*h*m(i+1)
+
+      end subroutine smooth_interpolate
 
 !=======================================================================
 
