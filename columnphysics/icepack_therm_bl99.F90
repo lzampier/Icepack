@@ -916,7 +916,9 @@
 !=======================================================================
 !
 ! Adjust thermal conductivity at interfaces to account for
-! two-dimensional effects such as ridging or floe edge processes.
+! unresolved horizontal conduction of heat. This parameterization
+! generates from the results in Zampieri et al. (2023)
+! DOI: https://doi.org/10.1029/2023GL106760
 !
 ! authors: Lorenzo Zampieri
 !
