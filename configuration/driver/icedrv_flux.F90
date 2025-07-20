@@ -702,7 +702,7 @@
       endif
       fsurfn    (:,:) = c0
       fcondtopn (:,:) = c0
-      fcondbotn (:,:) = c0
+      !fcondbotn (:,:) = c0
       flatn     (:,:) = c0
       fsensn    (:,:) = c0
       fpond     (:) = c0
