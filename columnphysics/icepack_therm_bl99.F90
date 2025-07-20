@@ -931,7 +931,7 @@
       !-----------------------------------------------------------------
 
       real (kind=dbl_kind), dimension(:), intent(inout) :: &
-         kh              ! effective conductivity at interfaces (W m-2 deg-1)
+         kh              ! effective conductivity at interfaces (W m-2 K-1)
 
       real (kind=dbl_kind), intent(in) :: &
          fcondbot       ! downward conductive flux at ice bottom (W m-2)
@@ -943,12 +943,30 @@
       integer (kind=int_kind) :: &
          k               ! vertical index
 
+      real (kind=dbl_kind) :: &
+         slope              , & ! fit slope for lateral conduction enhancement
+         intercept          , & ! fit intercept for lateral conduction enhancement
+         x_center           , & ! x coordinate of the family of lines origin
+         y_center           , & ! y coordinate of the family of lines origin
+         dfcondbot              ! fcondbot error
+
       character(len=*), parameter :: subname='(adjust_conductivity_2d_effects)'
 
       !-----------------------------------------------------------------
-      ! Adjust conductivity here (to be implemented)
+      ! Compute linear fit slope for lateral conduction enhancement
+      ! based on ksno value from namelist. 
+      ! TODO: Redundant computation when ksno is constant.
       !-----------------------------------------------------------------
 
+      call smooth_interpolate(ksno, slope)
+      intercept = y_center - (slope * x_center)
+      
+      !-----------------------------------------------------------------
+      ! Adjust conductivity here 
+      !-----------------------------------------------------------------
+
+      dfcondbot = (slope * fcondbot) + intercept
+      kh(:) = kh(:) * dfcondbot / fcondbot
 
       end subroutine adjust_conductivity_horizontal_conduction
 
@@ -1541,32 +1559,33 @@
 !
 !=======================================================================
       subroutine smooth_interpolate(x_input, y_output)
+      use icepack_kinds, only: dbl_kind
       implicit none
 
       !-----------------------------------------------------------------
       ! Input and output variables
       !-----------------------------------------------------------------
-      real, intent(in)  :: x_input   ! Snow thermal conductivity (W m-1 K-1)
-      real, intent(out) :: y_output  ! Slope correction factor (dimensionless)
+      real(kind=dbl_kind), intent(in)  :: x_input   ! Snow thermal conductivity (W m-1 K-1)
+      real(kind=dbl_kind), intent(out) :: y_output  ! Slope correction factor (dimensionless)
 
       !-----------------------------------------------------------------
       ! Local parameters
       !-----------------------------------------------------------------
-      real, parameter :: large_value = 1.0  ! Value returned for x <= xmin
-      integer, parameter :: n_points = 5    ! Number of tabulated data points
+      real(kind=dbl_kind), parameter :: large_value = 1.0_dbl_kind  ! Value returned for x <= xmin
+      integer, parameter :: n_points = 5                            ! Number of tabulated data points
 
-      real :: x_points(n_points)            ! Snow conductivity values (W m-1 K-1)
-      real :: y_points(n_points)            ! Slope values (dimensionless)
-      real :: delta(n_points-1)             ! Secant slopes
-      real :: m(n_points)                   ! PCHIP endpoint slopes
-      real :: h, t, t2, t3                  ! Temporary variables
-      integer :: i                          ! Loop index
+      real(kind=dbl_kind) :: x_points(n_points)        ! Snow conductivity values (W m-1 K-1)
+      real(kind=dbl_kind) :: y_points(n_points)        ! Slope values (dimensionless)
+      real(kind=dbl_kind) :: delta(n_points-1)         ! Secant slopes
+      real(kind=dbl_kind) :: m(n_points)               ! PCHIP endpoint slopes
+      real(kind=dbl_kind) :: h, t, t2, t3              ! Temporary variables
+      integer(kind=int_kind) :: i                      ! Loop index
 
       !-----------------------------------------------------------------
       ! Tabulated data (Zampieri et al., 2023)
       !-----------------------------------------------------------------
-      x_points = (/ 0.001, 0.1, 0.3, 2.1, 100.0 /)
-      y_points = (/ 0.3,   0.14, 0.065, 0.0001, 0.0 /)
+      x_points = (/ 0.001_dbl_kind, 0.1_dbl_kind, 0.3_dbl_kind, 2.1_dbl_kind, 100.0_dbl_kind /)
+      y_points = (/ 0.3_dbl_kind,   0.14_dbl_kind, 0.065_dbl_kind, 0.0001_dbl_kind, 0.0_dbl_kind /)
 
       !-----------------------------------------------------------------
       ! Handle domain edges
@@ -1593,10 +1612,10 @@
       m(1) = delta(1)
       m(n_points) = delta(n_points-1)
       do i = 2, n_points-1
-         if (delta(i-1)*delta(i) > 0.0) then
-            m(i) = 2.0 * delta(i-1)*delta(i) / (delta(i-1) + delta(i))
+         if (delta(i-1)*delta(i) > 0.0_dbl_kind) then
+            m(i) = 2.0_dbl_kind * delta(i-1)*delta(i) / (delta(i-1) + delta(i))
          else
-            m(i) = 0.0
+            m(i) = 0.0_dbl_kind
          endif
       enddo
 
@@ -1618,9 +1637,9 @@
       !-----------------------------------------------------------------
       ! Evaluate Hermite cubic interpolation (Fritsch & Carlson, 1980)
       !-----------------------------------------------------------------
-      y_output = (2.0*t3 - 3.0*t2 + 1.0)*y_points(i) + &
-                 (t3 - 2.0*t2 + t)*h*m(i) + &
-                 (-2.0*t3 + 3.0*t2)*y_points(i+1) + &
+      y_output = (2.0_dbl_kind*t3 - 3.0_dbl_kind*t2 + 1.0_dbl_kind)*y_points(i) + &
+                 (t3 - 2.0_dbl_kind*t2 + t)*h*m(i) + &
+                 (-2.0_dbl_kind*t3 + 3.0_dbl_kind*t2)*y_points(i+1) + &
                  (t3 - t2)*h*m(i+1)
 
       end subroutine smooth_interpolate
