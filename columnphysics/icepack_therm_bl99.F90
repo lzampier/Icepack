@@ -207,6 +207,7 @@
       l_snow     = .false.
       l_cold     = .true.
       ! fcondbot   = c0 ! LZ: Becomes inout so no need to initialize to zero
+      kh(:) = c0 ! LZ: Initialize kh to zero now needed
       dTsf_prev  = c0
       dTi1_prev  = c0
       dfsens_dT  = c0
@@ -251,6 +252,7 @@
                          zTin,     kh,      zSin)
 
       call adjust_conductivity_horizontal_conduction (kh, fcondbot)
+      fcondbot = c0
 
       if (icepack_warnings_aborted(subname)) return
 
@@ -931,7 +933,7 @@
       !-----------------------------------------------------------------
 
       real (kind=dbl_kind), dimension(:), intent(inout) :: &
-         kh              ! effective conductivity at interfaces (W m-2 K-1)
+         kh              ! effective conductivity at interfaces (W m-2 deg-1)
 
       real (kind=dbl_kind), intent(in) :: &
          fcondbot       ! downward conductive flux at ice bottom (W m-2)
@@ -957,7 +959,8 @@
       ! based on ksno value from namelist. 
       ! TODO: Redundant computation when ksno is constant.
       !-----------------------------------------------------------------
-
+      x_center = -c2
+      y_center = 0.17_dbl_kind
       call smooth_interpolate(ksno, slope)
       intercept = y_center - (slope * x_center)
       
@@ -965,11 +968,16 @@
       ! Adjust conductivity here 
       !-----------------------------------------------------------------
 
-      dfcondbot = (slope * fcondbot) + intercept
-      kh(:) = kh(:) * dfcondbot / fcondbot
+      dfcondbot = min( ((slope * fcondbot) + intercept), c0 )
+
+      print *, "The value of fcondbot is", slope, intercept, fcondbot
+      print *, "The value of kh is", kh(:)
+      print *, "The value of kh_correction is", (kh(:) * dfcondbot / fcondbot)
+      if (fcondbot < - (intercept / slope)) then
+         kh(:) = kh(:) + (kh(:) * dfcondbot / fcondbot)
+      endif
 
       end subroutine adjust_conductivity_horizontal_conduction
-
 
 !=======================================================================
 !
