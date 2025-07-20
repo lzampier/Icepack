@@ -105,7 +105,7 @@
          flatn       , & ! surface downward latent heat (W m-2)
          flwoutn         ! upward LW at surface (W m-2)
 
-      real (kind=dbl_kind), intent(out):: &
+      real (kind=dbl_kind), intent(inout):: &
          fcondbot        ! downward cond flux at bottom surface (W m-2)
 
       real (kind=dbl_kind), intent(inout):: &
@@ -206,7 +206,7 @@
       converged  = .false.
       l_snow     = .false.
       l_cold     = .true.
-      fcondbot   = c0
+      ! fcondbot   = c0 ! LZ: Becomes inout so no need to initialize to zero
       dTsf_prev  = c0
       dTi1_prev  = c0
       dfsens_dT  = c0
@@ -249,6 +249,9 @@
       call conductivity (l_snow,                    &
                          hilyr,    hslyr,           &
                          zTin,     kh,      zSin)
+
+      call adjust_conductivity_horizontal_conduction (kh, fcondbot)
+
       if (icepack_warnings_aborted(subname)) return
 
       !-----------------------------------------------------------------
@@ -909,6 +912,44 @@
       enddo                     ! nilyr
 
       end subroutine conductivity
+
+!=======================================================================
+!
+! Adjust thermal conductivity at interfaces to account for
+! two-dimensional effects such as ridging or floe edge processes.
+!
+! authors: Lorenzo Zampieri
+!
+      subroutine adjust_conductivity_horizontal_conduction (kh, fcondbot)
+
+      implicit none
+
+      !-----------------------------------------------------------------
+      ! Arguments
+      !-----------------------------------------------------------------
+
+      real (kind=dbl_kind), dimension(:), intent(inout) :: &
+         kh              ! effective conductivity at interfaces (W m-2 deg-1)
+
+      real (kind=dbl_kind), intent(in) :: &
+         fcondbot       ! downward conductive flux at ice bottom (W m-2)
+
+      !-----------------------------------------------------------------
+      ! Local variables
+      !-----------------------------------------------------------------
+
+      integer (kind=int_kind) :: &
+         k               ! vertical index
+
+      character(len=*), parameter :: subname='(adjust_conductivity_2d_effects)'
+
+      !-----------------------------------------------------------------
+      ! Adjust conductivity here (to be implemented)
+      !-----------------------------------------------------------------
+
+
+      end subroutine adjust_conductivity_horizontal_conduction
+
 
 !=======================================================================
 !
