@@ -683,6 +683,13 @@
          write (nu_diag,*) 'WARNING: tr_fsd=T but wave_spec=F - not recommended'
       end if
 
+      if (horiz_conduction .and. ktherm /= 1) then
+         write (nu_diag,*) 'WARNING: horiz_conduction=T but ktherm /= 1'
+         write (nu_diag,*) 'WARNING: Lateral conduction only supported for ktherm=1 (BL99)'
+         write (nu_diag,*) 'WARNING: Setting horiz_conduction=F'
+         horiz_conduction = .false.
+      endif
+
       !-----------------------------------------------------------------
       ! spew
       !-----------------------------------------------------------------
