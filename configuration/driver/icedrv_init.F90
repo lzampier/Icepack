@@ -112,7 +112,7 @@
          cpl_frazil, congel_freeze, tfrz_option, saltflux_option, &
          frzpnd, atmbndy, wave_spec_type, snwredist, snw_aging_table
 
-      logical (kind=log_kind) :: sw_redist, use_smliq_pnd, snwgrain, update_ocn_f
+      logical (kind=log_kind) :: sw_redist, use_smliq_pnd, snwgrain, update_ocn_f, horiz_conduction
       real (kind=dbl_kind)    :: sw_frac, sw_dtemp
 
       ! Flux convergence tolerance
@@ -160,7 +160,7 @@
         a_rapid_mode,   Rac_rapid_mode,  aspect_rapid_mode,             &
         dSdt_slow_mode, phi_c_slow_mode, phi_i_mushy,                   &
         floediam,       hfrazilmin,      Tliquidus_max,    hi_min,      &
-        tscale_pnd_drain
+        tscale_pnd_drain, horiz_conduction
 
       namelist /dynamics_nml/ &
         kstrength,      krdg_partic,    krdg_redist,    mu_rdg,         &
@@ -235,6 +235,7 @@
            rfracmin_out=rfracmin, rfracmax_out=rfracmax, &
            pndaspect_out=pndaspect, hs1_out=hs1, hp1_out=hp1, &
            apnd_sl_out=apnd_sl, tscale_pnd_drain_out=tscale_pnd_drain, &
+           horiz_conduction_out=horiz_conduction, &  
            ktherm_out=ktherm, calc_Tsfc_out=calc_Tsfc, &
            semi_implicit_Tsfc_out=semi_implicit_Tsfc, &
            vapor_flux_correction_out=vapor_flux_correction, &
@@ -788,6 +789,7 @@
          if (ktherm == 1) &
          write(nu_diag,1030) ' conduct                   = ', trim(conduct)
          write(nu_diag,1005) ' emissivity                = ', emissivity
+         write(nu_diag,1010) ' horiz_cond                = ', horiz_cond
          if (ktherm == 2) then
          write(nu_diag,1005) ' a_rapid_mode              = ', a_rapid_mode
          write(nu_diag,1005) ' Rac_rapid_mode            = ', Rac_rapid_mode
@@ -1022,6 +1024,7 @@
            rfracmin_in=rfracmin, rfracmax_in=rfracmax, &
            pndaspect_in=pndaspect, hs1_in=hs1, hp1_in=hp1, &
            apnd_sl_in=apnd_sl, tscale_pnd_drain_in=tscale_pnd_drain, &
+           horiz_conduction_in=horiz_cond, &
            floediam_in=floediam, hfrazilmin_in=hfrazilmin, &
            ktherm_in=ktherm, calc_Tsfc_in=calc_Tsfc, &
            semi_implicit_Tsfc_in=semi_implicit_Tsfc, &
