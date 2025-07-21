@@ -14,7 +14,7 @@
       use icepack_kinds
       use icepack_parameters, only: c0, c1, c2, p1, p5, puny
       use icepack_parameters, only: rhoi, rhos, hs_min, cp_ice, cp_ocn, depressT, Lfresh, ksno, kice
-      use icepack_parameters, only: conduct, calc_Tsfc, semi_implicit_Tsfc
+      use icepack_parameters, only: conduct, calc_Tsfc, semi_implicit_Tsfc, horiz_conduction
       use icepack_parameters, only: sw_redist, sw_frac, sw_dtemp
       use icepack_tracers, only: nilyr, nslyr
       use icepack_warnings, only: warnstr, icepack_warnings_add
@@ -250,8 +250,9 @@
       call conductivity (l_snow,                    &
                          hilyr,    hslyr,           &
                          zTin,     kh,      zSin)
-
-      call adjust_conductivity_horizontal_conduction (kh, fcondbot)
+      if (horiz_conduction) then
+         call adjust_conductivity_horizontal_conduction (kh, fcondbot)
+      end if
       fcondbot = c0
 
       if (icepack_warnings_aborted(subname)) return

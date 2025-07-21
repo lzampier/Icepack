@@ -789,7 +789,7 @@
          if (ktherm == 1) &
          write(nu_diag,1030) ' conduct                   = ', trim(conduct)
          write(nu_diag,1005) ' emissivity                = ', emissivity
-         write(nu_diag,1010) ' horiz_cond                = ', horiz_cond
+         write(nu_diag,1010) ' horiz_conduction          = ', horiz_conduction
          if (ktherm == 2) then
          write(nu_diag,1005) ' a_rapid_mode              = ', a_rapid_mode
          write(nu_diag,1005) ' Rac_rapid_mode            = ', Rac_rapid_mode
@@ -1024,7 +1024,7 @@
            rfracmin_in=rfracmin, rfracmax_in=rfracmax, &
            pndaspect_in=pndaspect, hs1_in=hs1, hp1_in=hp1, &
            apnd_sl_in=apnd_sl, tscale_pnd_drain_in=tscale_pnd_drain, &
-           horiz_conduction_in=horiz_cond, &
+           horiz_conduction_in=horiz_conduction, &
            floediam_in=floediam, hfrazilmin_in=hfrazilmin, &
            ktherm_in=ktherm, calc_Tsfc_in=calc_Tsfc, &
            semi_implicit_Tsfc_in=semi_implicit_Tsfc, &

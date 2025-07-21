@@ -155,10 +155,11 @@
                                   ! atmos-ice fluxes are provided to CICE
          semi_implicit_Tsfc = .false.    ,&! surface temperature coupling option
          vapor_flux_correction = .false. ,&! compute mass/enthalpy correction for evaporation/sublimation
-         update_ocn_f = .false. ,&! include fresh water and salt fluxes for frazil
-         modal_aero   = .false. ,&! if true, use modal aerosal optical properties
-                                  ! only for use with tr_aero or tr_zaero
-         conserv_check = .false.  ! if true, do conservations checks and abort
+         update_ocn_f = .false. ,&  ! include fresh water and salt fluxes for frazil
+         modal_aero   = .false. ,&  ! if true, use modal aerosal optical properties
+                                    ! only for use with tr_aero or tr_zaero
+         conserv_check = .false., & ! if true, do conservations checks and abort
+         horiz_conduction = .false. ! if true, include horizontal conduction parameterization
 
       character(len=char_len), public :: &
          congel_freeze  = 'two-step'  ! congelation computation
@@ -571,7 +572,7 @@
          stefan_boltzmann_in, ice_ref_salinity_in, &
          Tffresh_in, Lsub_in, Lvap_in, Timelt_in, Tsmelt_in, &
          iceruf_in, Cf_in, Pstar_in, Cstar_in, kappav_in, &
-         kice_in, ksno_in, &
+         kice_in, ksno_in, horiz_conduction_in, &
          zref_in, hs_min_in, snowpatch_in, rhosi_in, sk_l_in, &
          saltmax_in, phi_init_in, min_salin_in, Tliquidus_max_in, &
          min_bgc_in, dSin0_frazil_in, hi_ssl_in, hs_ssl_in, hs_ssl_min_in, &
@@ -716,7 +717,8 @@
          semi_implicit_Tsfc_in   , &! compute dfsurf/dT, dflat/dT terms instead of fsurf, flat
          vapor_flux_correction_in, &! compute mass/enthalpy correction when evaporation/sublimation
                             ! computed outside at 0C
-         update_ocn_f_in    ! include fresh water and salt fluxes for frazil
+         update_ocn_f_in, &    ! include fresh water and salt fluxes for frazil
+         horiz_conduction_in   ! horizontal conduction in ice (true/false)
 
       real (kind=dbl_kind), intent(in), optional :: &
          hi_min_in,  &      ! minimum ice thickness allowed (m) for thermo
@@ -1139,6 +1141,7 @@
       if (present(gravit_in)            ) gravit           = gravit_in
       if (present(viscosity_dyn_in)     ) viscosity_dyn    = viscosity_dyn_in
       if (present(tscale_pnd_drain_in)  ) tscale_pnd_drain = tscale_pnd_drain_in
+      if (present(horiz_conduction_in)) horiz_conduction  = horiz_conduction_in
       if (present(Tocnfrz_in)           ) Tocnfrz          = Tocnfrz_in
       if (present(rhofresh_in)          ) rhofresh         = rhofresh_in
       if (present(zvir_in)              ) zvir             = zvir_in
@@ -1580,7 +1583,7 @@
          stefan_boltzmann_out, ice_ref_salinity_out, &
          Tffresh_out, Lsub_out, Lvap_out, Timelt_out, Tsmelt_out, &
          iceruf_out, Cf_out, Pstar_out, Cstar_out, kappav_out, &
-         kice_out, ksno_out, &
+         kice_out, ksno_out, horiz_conduction_out, &
          zref_out, hs_min_out, snowpatch_out, rhosi_out, sk_l_out, &
          saltmax_out, phi_init_out, min_salin_out, Tliquidus_max_out, &
          min_bgc_out, dSin0_frazil_out, hi_ssl_out, hs_ssl_out, hs_ssl_min_out, &
@@ -1731,8 +1734,9 @@
                             ! atmos-ice fluxes are provided to CICE
          semi_implicit_Tsfc_out    ,&! compute dfsurf/dT, dflat/dT terms instead of fsurf, flat
          vapor_flux_correction_out ,&! compute mass/enthalpy correction when evaporation/sublimation
-                            ! computed outside at 0C
-         update_ocn_f_out   ! include fresh water and salt fluxes for frazil
+                               ! computed outside at 0C
+         update_ocn_f_out, &   ! include fresh water and salt fluxes for frazil
+         horiz_conduction_out  ! horizontal conduction in ice (true/false)
 
       real (kind=dbl_kind), intent(out), optional :: &
          hi_min_out,  &      ! minimum ice thickness allowed (m) for thermo
@@ -2189,6 +2193,7 @@
       if (present(gravit_out)            ) gravit_out       = gravit
       if (present(viscosity_dyn_out)     ) viscosity_dyn_out= viscosity_dyn
       if (present(tscale_pnd_drain_out)  ) tscale_pnd_drain_out = tscale_pnd_drain
+      if (present(horiz_conduction_out)   ) horiz_conduction_out = horiz_conduction
       if (present(Tocnfrz_out)           ) Tocnfrz_out      = Tocnfrz
       if (present(rhofresh_out)          ) rhofresh_out     = rhofresh
       if (present(zvir_out)              ) zvir_out         = zvir
@@ -2489,6 +2494,7 @@
         write(iounit,*) "  gravit     = ",gravit
         write(iounit,*) "  viscosity_dyn = ",viscosity_dyn
         write(iounit,*) "  tscale_pnd_drain = ",tscale_pnd_drain
+        write(iounit,*) "  horiz_conduction = ",horiz_conduction
         write(iounit,*) "  Tocnfrz    = ",Tocnfrz
         write(iounit,*) "  rhofresh   = ",rhofresh
         write(iounit,*) "  zvir       = ",zvir
