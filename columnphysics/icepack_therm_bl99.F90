@@ -207,7 +207,7 @@
       l_snow     = .false.
       l_cold     = .true.
       ! fcondbot   = c0 ! LZ: Becomes inout so no need to initialize to zero
-      kh(:) = c0 ! LZ: Initialize kh to zero now needed
+      kh(:) = c0 ! LZ: Initialize kh to zero now needed, otherwise it is accumulated
       dTsf_prev  = c0
       dTi1_prev  = c0
       dfsens_dT  = c0
@@ -250,10 +250,13 @@
       call conductivity (l_snow,                    &
                          hilyr,    hslyr,           &
                          zTin,     kh,      zSin)
+
       if (horiz_conduction) then
          call adjust_conductivity_horizontal_conduction (kh, fcondbot)
       end if
-      fcondbot = c0
+
+      fcondbot = c0 ! LZ: Moves here because value from the previous timestep is 
+                    ! used in the adjust_conductivity_horizontal_conduction subroutine
 
       if (icepack_warnings_aborted(subname)) return
 
@@ -947,9 +950,9 @@ subroutine adjust_conductivity_horizontal_conduction (kh, fcondbot)
     real (kind=dbl_kind)            :: threshold                     ! threshold value for correction
     real (kind=dbl_kind)            :: kh_correction_factor          ! correction multiplier applied to kh
 
-    logical (kind=log_kind), parameter :: debug_mode = .true.        ! debug mode flag (local debug)
+    logical (kind=log_kind), parameter :: debug_mode = .false.       ! debug mode flag (local debug)
 
-    character(len=*), parameter     :: subname = '(adjust_conductivity_2d_effects)'
+    character(len=*), parameter     :: subname = '(adjust_conductivity_horizontal_conduction)'
 
     !-----------------------------------------------------------------
     ! Compute slope and intercept of correction line
@@ -974,7 +977,7 @@ subroutine adjust_conductivity_horizontal_conduction (kh, fcondbot)
     endif
 
     !-----------------------------------------------------------------
-    ! Optional debug output
+    ! Optional debug output (needs to be removed before merging)
     !-----------------------------------------------------------------
     if (debug_mode) then
         print *, 'DEBUG:', subname
