@@ -924,60 +924,65 @@
 !
 ! Author: Lorenzo Zampieri, ECMWF (previously NCAR)
 !
-      subroutine adjust_conductivity_horizontal_conduction (kh, fcondbot)
+subroutine adjust_conductivity_horizontal_conduction (kh, fcondbot)
+    implicit none
 
-      implicit none
+    !-----------------------------------------------------------------
+    ! Arguments
+    !-----------------------------------------------------------------
+    real (kind=dbl_kind), dimension(:), intent(inout) :: kh          ! conductivity at interfaces (W m-2 K-1)
+    real (kind=dbl_kind), intent(in)                  :: fcondbot    ! downward conductive flux at ice bottom (W m-2)
 
-      !-----------------------------------------------------------------
-      ! Arguments
-      !-----------------------------------------------------------------
+    !-----------------------------------------------------------------
+    ! Local constants and variables
+    !-----------------------------------------------------------------
+    real (kind=dbl_kind), parameter :: origin_x = -c2                ! x-coordinate of lines origin
+    real (kind=dbl_kind), parameter :: origin_y = 0.17_dbl_kind      ! y-coordinate of lines origin
 
-      real (kind=dbl_kind), dimension(:), intent(inout) :: &
-         kh              ! effective conductivity at interfaces (W m-2 deg-1)
+    integer (kind=int_kind)         :: k                             ! vertical index
+    real (kind=dbl_kind)            :: fit_slope                     ! slope of correction line
+    real (kind=dbl_kind)            :: fit_intercept                 ! intercept of correction line
+    real (kind=dbl_kind)            :: delta_fcondbot                ! adjustment to fcondbot
+    real (kind=dbl_kind)            :: threshold                     ! threshold value for correction
+    real (kind=dbl_kind)            :: kh_correction_factor          ! correction multiplier applied to kh
 
-      real (kind=dbl_kind), intent(in) :: &
-         fcondbot       ! downward conductive flux at ice bottom (W m-2)
+    logical (kind=log_kind), parameter :: debug_mode = .true.        ! debug mode flag (local debug)
 
-      !-----------------------------------------------------------------
-      ! Local variables
-      !-----------------------------------------------------------------
+    character(len=*), parameter     :: subname = '(adjust_conductivity_2d_effects)'
 
-      integer (kind=int_kind) :: &
-         k               ! vertical index
+    !-----------------------------------------------------------------
+    ! Compute slope and intercept of correction line
+    !-----------------------------------------------------------------
+    call smooth_interpolate(ksno, fit_slope)
+    fit_intercept = origin_y - fit_slope * origin_x
 
-      real (kind=dbl_kind) :: &
-         slope              , & ! fit slope for lateral conduction enhancement
-         intercept          , & ! fit intercept for lateral conduction enhancement
-         x_center           , & ! x coordinate of the family of lines origin
-         y_center           , & ! y coordinate of the family of lines origin
-         dfcondbot              ! fcondbot error
+    !-----------------------------------------------------------------
+    ! Compute correction to fcondbot (capped at zero)
+    !-----------------------------------------------------------------
+    delta_fcondbot = min(fit_slope * fcondbot + fit_intercept, c0)
 
-      character(len=*), parameter :: subname='(adjust_conductivity_2d_effects)'
+    !-----------------------------------------------------------------
+    ! Determine correction factor for kh
+    !-----------------------------------------------------------------
+    threshold = -fit_intercept / fit_slope
+    if (fcondbot < threshold) then
+        kh_correction_factor = 1.0_dbl_kind + delta_fcondbot / fcondbot
+        kh(:) = kh(:) * kh_correction_factor
+    else
+        kh_correction_factor = 1.0_dbl_kind  ! no correction applied
+    endif
 
-      !-----------------------------------------------------------------
-      ! Compute linear fit slope for lateral conduction enhancement
-      ! based on ksno value from namelist. 
-      ! TODO: Redundant computation when ksno is constant.
-      !-----------------------------------------------------------------
-      x_center = -c2
-      y_center = 0.17_dbl_kind
-      call smooth_interpolate(ksno, slope)
-      intercept = y_center - (slope * x_center)
-      
-      !-----------------------------------------------------------------
-      ! Adjust conductivity here 
-      !-----------------------------------------------------------------
+    !-----------------------------------------------------------------
+    ! Optional debug output
+    !-----------------------------------------------------------------
+    if (debug_mode) then
+        print *, 'DEBUG:', subname
+        print *, 'slope=', fit_slope, ' intercept=', fit_intercept
+        print *, 'fcondbot=', fcondbot, ' threshold=', threshold
+        print *, 'correction factor applied to kh =', kh_correction_factor
+    endif
 
-      dfcondbot = min( ((slope * fcondbot) + intercept), c0 )
-
-      print *, "The value of fcondbot is", slope, intercept, fcondbot
-      print *, "The value of kh is", kh(:)
-      print *, "The value of kh_correction is", (kh(:) * dfcondbot / fcondbot)
-      if (fcondbot < - (intercept / slope)) then
-         kh(:) = kh(:) + (kh(:) * dfcondbot / fcondbot)
-      endif
-
-      end subroutine adjust_conductivity_horizontal_conduction
+end subroutine adjust_conductivity_horizontal_conduction
 
 !=======================================================================
 !
